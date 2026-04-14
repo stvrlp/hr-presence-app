@@ -1,0 +1,10 @@
+node_modules
+.next
+.env
+.env.local
+.env.*.local
+*.rtf
+.DS_Store
+prisma/presence.db
+tsconfig.tsbuildinfo
+*.tsbuildinfo

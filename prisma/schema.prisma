@@ -1,0 +1,57 @@
+// Prisma schema for local SQLite — stores manager actions, users, departments.
+// The ERP data is read via raw mssql queries in lib/db.ts.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Manager actions ──────────────────────────────────────────────────────────
+// action stores one of: PRESENT | REJECTED | LEAVE | SICK | ABSENT | REMOTE | DAYOFF
+// SQLite does not support native enums — stored as String with validation at the API layer.
+model PresenceAction {
+  id           String   @id @default(cuid())
+  employeeCode String
+  date         String   // ISO date string: "YYYY-MM-DD"
+  action       String   // "PRESENT"|"REJECTED"|"LEAVE"|"SICK"|"ABSENT"|"REMOTE"|"DAYOFF"
+  note         String?
+  managerId    String   // User.id of the manager who recorded the action
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([employeeCode, date])
+  @@index([date])
+}
+
+// ── Users ────────────────────────────────────────────────────────────────────
+model User {
+  id           String           @id @default(cuid())
+  username     String           @unique
+  fullName     String
+  passwordHash String
+  role         String           @default("USER") // "ADMIN" | "USER"
+  departments  UserDepartment[]
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+}
+
+// ── Departments (synced from ERP TMIMATA_apasx) ──────────────────────────────
+model Department {
+  code  String           @id  // ERP TMHMA code
+  descr String
+  users UserDepartment[]
+}
+
+// ── User ↔ Department (many-to-many) ─────────────────────────────────────────
+model UserDepartment {
+  userId   String
+  deptCode String
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department Department @relation(fields: [deptCode], references: [code], onDelete: Cascade)
+
+  @@id([userId, deptCode])
+}
