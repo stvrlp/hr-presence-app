@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getPool } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { isExcludedEmployeeCode } from '@/lib/employees';
+import { toLocalDateString } from '@/lib/utils';
 import sql from 'mssql';
 
 export async function GET(req: NextRequest) {
@@ -14,7 +15,7 @@ export async function GET(req: NextRequest) {
   if (!session) return NextResponse.json({ error: 'Μη εξουσιοδοτημένος' }, { status: 401 });
 
   const { searchParams } = new URL(req.url);
-  const dateParam = searchParams.get('date') ?? new Date().toISOString().slice(0, 10);
+  const dateParam = searchParams.get('date') ?? toLocalDateString(new Date());
 
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateParam) || isNaN(new Date(dateParam).getTime())) {
     return NextResponse.json(
