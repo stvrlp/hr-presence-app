@@ -451,6 +451,103 @@ export default function PresencePage() {
     }
   }
 
+  async function handleMonthlyExport() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
+    const monthStr = `${year}-${String(month).padStart(2, '0')}`;
+    const today = toLocalDateString(now);
+
+    try {
+      const res = await fetch(`/api/export/monthly?month=${monthStr}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Σφάλμα εξαγωγής');
+
+      const XLSX = await import('xlsx');
+
+      const daysInMonth = new Date(year, month, 0).getDate();
+      const dates: string[] = [];
+      for (let d = 1; d <= daysInMonth; d++) {
+        dates.push(`${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`);
+      }
+
+      const STATUS_CODE: Record<string, string> = {
+        PRESENT:  '1',
+        LEAVE:    'A',
+        SICK:     'ΑΓ',
+        DAYOFF:   'R',
+        REMOTE:   'ΤΗΛ',
+        ABSENT:   '0',
+        REJECTED: 'ΑΑ',
+      };
+
+      type EmpRow = { code: string; surname: string; name: string; department: string | null };
+      type ActEntry = { employeeCode: string; action: string };
+      type AttEntry = { code: string };
+
+      const rows = (data.employees as EmpRow[]).map((emp) => {
+        const row: Record<string, string> = {
+          'Κωδικός': emp.code,
+          'Επώνυμο': emp.surname,
+          'Όνομα':   emp.name,
+          'Τμήμα':   emp.department ?? '',
+        };
+
+        for (const dateStr of dates) {
+          const [y, m, d] = dateStr.split('-');
+          const colHeader = `${d}/${m}/${y}`;
+
+          if (dateStr > today) {
+            row[colHeader] = '';
+            continue;
+          }
+
+          const dayActions: ActEntry[] = data.actions[dateStr] ?? [];
+          const empAction = dayActions.find((a) => a.employeeCode === emp.code);
+
+          if (empAction) {
+            row[colHeader] = STATUS_CODE[empAction.action] ?? '';
+          } else {
+            const dayAtt: AttEntry[] = data.attendance[dateStr] ?? [];
+            row[colHeader] = dayAtt.some((a) => a.code === emp.code) ? '1' : '';
+          }
+        }
+
+        return row;
+      });
+
+      const GREEK_MONTHS = [
+        'Ιανουάριος','Φεβρουάριος','Μάρτιος','Απρίλιος',
+        'Μάιος','Ιούνιος','Ιούλιος','Αύγουστος',
+        'Σεπτέμβριος','Οκτώβριος','Νοέμβριος','Δεκέμβριος',
+      ];
+
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Παρουσιολόγιο');
+
+      const buffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      const blob = new Blob([buffer], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Παρουσιολόγιο_${GREEK_MONTHS[month - 1]}_${year}.xlsx`;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      toast({
+        title: 'Σφάλμα εξαγωγής',
+        description: err instanceof Error ? err.message : 'Δεν ήταν δυνατή η λήψη του αρχείου',
+        variant: 'destructive',
+      });
+    }
+  }
+
   // ─────────────────────────────────────────────────────────────────────────
 
   // Raw counts (unfiltered by search/dept, for tab badges)
@@ -535,15 +632,24 @@ export default function PresencePage() {
             </SelectContent>
           </Select>
 
-          <Button
-            variant="outline"
-            className="ml-auto"
-            onClick={handleExport}
-            disabled={loading || filteredRows.length === 0}
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Εξαγωγή σε Excel
-          </Button>
+          <div className="ml-auto flex gap-2">
+            <Button
+              variant="outline"
+              onClick={handleMonthlyExport}
+              disabled={loading}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Εξαγωγή Μηνός
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleExport}
+              disabled={loading || filteredRows.length === 0}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Εξαγωγή σε Excel
+            </Button>
+          </div>
         </div>
 
         {/* ── Summary bar ─────────────────────────────────────────────── */}
