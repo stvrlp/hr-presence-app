@@ -26,6 +26,11 @@ export async function GET(req: NextRequest) {
   }
 
   const [year, month] = monthParam.split('-').map(Number);
+
+  if (month < 1 || month > 12) {
+    return NextResponse.json({ error: 'Μη έγκυρος μήνας' }, { status: 400 });
+  }
+
   const monthStart = new Date(year, month - 1, 1, 0, 0, 0);
   const monthEnd   = new Date(year, month, 1, 0, 0, 0); // exclusive upper bound
 
