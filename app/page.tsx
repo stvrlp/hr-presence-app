@@ -755,9 +755,10 @@ export default function PresencePage() {
               <TableRow className="bg-muted/50">
                 <TableHead className="w-10">
                   <Checkbox
+                    aria-label="Επιλογή όλων"
                     checked={allVisibleSelected ? true : someSelected ? 'indeterminate' : false}
                     onCheckedChange={(checked) => {
-                      if (checked) {
+                      if (checked === true) {
                         setSelectedCodes(new Set(filteredRows.map((r) => r.code)));
                       } else {
                         setSelectedCodes(new Set());
@@ -812,6 +813,7 @@ export default function PresencePage() {
                     >
                       <TableCell>
                         <Checkbox
+                          aria-label={`Επιλογή ${row.surname} ${row.name}`}
                           checked={selectedCodes.has(row.code)}
                           onCheckedChange={(checked) => {
                             setSelectedCodes((prev) => {
