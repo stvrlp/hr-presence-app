@@ -835,10 +835,10 @@ export default function PresencePage() {
                       </TableCell>
                       {isPresenceTab && (
                         <>
-                          <TableCell className="text-center font-mono text-sm">
+                          <TableCell className="text-center text-sm">
                             {row.timeIn ?? '—'}
                           </TableCell>
-                          <TableCell className="text-center font-mono text-sm">
+                          <TableCell className="text-center text-sm">
                             {row.timeOut ?? '—'}
                           </TableCell>
                         </>
