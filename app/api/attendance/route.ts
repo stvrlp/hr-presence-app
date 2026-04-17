@@ -25,7 +25,12 @@ export async function GET(req: NextRequest) {
 
   try {
     const pool = await getPool();
-    const request = pool.request().input('targetDate', sql.Date, new Date(dateParam));
+    const [y, m, d] = dateParam.split('-').map(Number);
+    const dayStart = new Date(y, m - 1, d, 0, 0, 0);
+    const dayEnd   = new Date(y, m - 1, d + 1, 0, 0, 0);
+    const request = pool.request()
+      .input('dayStart', sql.DateTime, dayStart)
+      .input('dayEnd',   sql.DateTime, dayEnd);
 
     let deptFilter = '';
     if (session.role === 'USER' && session.departments.length > 0) {
@@ -56,9 +61,9 @@ export async function GET(req: NextRequest) {
           MIN(CASE WHEN i.[Expr4] = 1 THEN CAST(i.[Expr3] AS TIME) END) AS [Ώρα εισόδου],
           MAX(CASE WHEN i.[Expr4] = 2 THEN CAST(i.[Expr3] AS TIME) END) AS [Ώρα εξόδου]
         FROM [PYLON].[dbo].[io_10days] i
-        WHERE CAST(i.[Expr3] AS DATE) = @targetDate
+        WHERE i.[Expr3] >= @dayStart AND i.[Expr3] < @dayEnd
           AND i.[Expr4] IN (1, 2)
-        GROUP BY i.[Expr2], CAST(i.[Expr3] AS DATE)
+        GROUP BY i.[Expr2]
       ) x
       INNER JOIN [PYLON].[dbo].[SS_vEMP_CARD] e ON e.[CARD_CODE] = x.[CARD_CODE]
       LEFT JOIN [PYLON].[dbo].[TMIMATA_apasx] t ON e.[TMHMA] = t.[TMHMA]
