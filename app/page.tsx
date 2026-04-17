@@ -423,36 +423,40 @@ export default function PresencePage() {
   }
 
   async function handleMassAction(action: ActionType) {
+    if (selectedCodes.size === 0) return;
     setMassActioning(true);
-    const codes = Array.from(selectedCodes);
+    try {
+      const codes = Array.from(selectedCodes);
 
-    const results = await Promise.allSettled(
-      codes.map((employeeCode) =>
-        fetch('/api/actions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ employeeCode, date: selectedDate, action }),
-        }).then((r) => {
-          if (!r.ok) throw new Error();
-        })
-      )
-    );
+      const results = await Promise.allSettled(
+        codes.map((employeeCode) =>
+          fetch('/api/actions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ employeeCode, date: selectedDate, action }),
+          }).then((r) => {
+            if (!r.ok) throw new Error(`${r.status}`);
+          })
+        )
+      );
 
-    const succeeded = results.filter((r) => r.status === 'fulfilled').length;
-    const failed    = results.filter((r) => r.status === 'rejected').length;
+      const succeeded = results.filter((r) => r.status === 'fulfilled').length;
+      const failed    = results.filter((r) => r.status === 'rejected').length;
 
-    if (failed === 0) {
-      toast({ title: `Ενέργεια εφαρμόστηκε σε ${succeeded} εργαζόμενους` });
-    } else {
-      toast({
-        title: `${succeeded} επιτυχίες, ${failed} αποτυχίες`,
-        variant: 'destructive',
-      });
+      if (failed === 0) {
+        toast({ title: `Ενέργεια εφαρμόστηκε σε ${succeeded === 1 ? '1 εργαζόμενο' : `${succeeded} εργαζόμενους`}` });
+      } else {
+        toast({
+          title: `${succeeded} επιτυχίες, ${failed} αποτυχίες`,
+          variant: 'destructive',
+        });
+      }
+
+      setSelectedCodes(new Set());
+      await fetchData(selectedDate, true);
+    } finally {
+      setMassActioning(false);
     }
-
-    setSelectedCodes(new Set());
-    setMassActioning(false);
-    fetchData(selectedDate, true);
   }
 
   // ── Excel export ─────────────────────────────────────────────────────────
