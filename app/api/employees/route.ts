@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const dateParam = searchParams.get('date') ?? new Date().toISOString().slice(0, 10);
 
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateParam) || isNaN(new Date(dateParam).getTime())) {
     return NextResponse.json(
       { error: 'Απαιτείται παράμετρος date σε μορφή YYYY-MM-DD' },
       { status: 400 }
@@ -26,7 +26,8 @@ export async function GET(req: NextRequest) {
   try {
     const pool = await getPool();
     const request = pool.request();
-    request.input('targetDate', sql.Date, new Date(dateParam));
+    const [y, m, d] = dateParam.split('-').map(Number);
+    request.input('targetDate', sql.Date, new Date(y, m - 1, d));
 
     let deptFilter = '';
     if (session.role === 'USER' && session.departments.length > 0) {
@@ -47,7 +48,6 @@ export async function GET(req: NextRequest) {
         e.[SURNAME]    AS surname,
         e.[NAME]       AS name,
         e.[CODE]       AS code,
-        e.[ISACTIVE]   AS isActive,
         t.[DESCR]      AS department,
         e.[COD_YPOKAT] AS subCategory,
         e.[HRDATE]     AS hrDate,
