@@ -818,7 +818,7 @@ export default function PresencePage() {
                           onCheckedChange={(checked) => {
                             setSelectedCodes((prev) => {
                               const next = new Set(prev);
-                              if (checked) next.add(row.code);
+                              if (checked === true) next.add(row.code);
                               else next.delete(row.code);
                               return next;
                             });
