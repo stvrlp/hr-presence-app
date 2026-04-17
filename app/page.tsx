@@ -144,7 +144,7 @@ export default function PresencePage() {
 
       try {
         const [empRes, attRes, actRes] = await Promise.all([
-          fetch('/api/employees'),
+          fetch(`/api/employees?date=${date}`),
           fetch(`/api/attendance?date=${date}`),
           fetch(`/api/actions?date=${date}`),
         ]);
