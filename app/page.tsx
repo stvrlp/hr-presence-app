@@ -176,12 +176,12 @@ export default function PresencePage() {
           fetch(`/api/leaves?date=${date}`),
         ]);
 
-        const [empData, attData, actData, leaveData] = await Promise.all([
+        const [empData, attData, actData] = await Promise.all([
           empRes.json(),
           attRes.json(),
           actRes.json(),
-          leaveRes.json(),
         ]);
+        const leaveData = leaveRes.ok ? await leaveRes.json().catch(() => null) : null;
 
         if (!empRes.ok) throw new Error(empData.error ?? 'Σφάλμα φόρτωσης εργαζομένων');
         if (!attRes.ok) throw new Error(attData.error ?? 'Σφάλμα φόρτωσης παρουσιών');
@@ -297,6 +297,7 @@ export default function PresencePage() {
               leaveRequest: leave
                 ? { description: leave.description, excelCode: leave.excelCode, actionType: leave.actionType }
                 : null,
+              // hasCardEntry is always true in this block — PRESENT is the correct fallback
               status: act ? act.action : 'PRESENT',
             });
           }
