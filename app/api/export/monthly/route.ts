@@ -110,6 +110,7 @@ export async function GET(req: NextRequest) {
         WHERE a.[START_DATE] <= @monthEndDate
           AND a.[END_DATE]   >= @monthStart
           AND e.[CODE] IS NOT NULL
+          ${deptFilter}
       `),
     ]);
 

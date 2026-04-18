@@ -454,7 +454,9 @@ export default function PresencePage() {
                 action: null,
                 actionNote: null,
                 managerId: null,
-                status: r.hasCardEntry ? 'PRESENT' : (r.leaveRequest?.actionType ?? 'UNKNOWN'),
+                status: r.hasCardEntry
+                  ? 'PRESENT'
+                  : (r.leaveRequest?.actionType ?? (new Date(r.date).getDay() % 6 === 0 ? 'DAYOFF' : 'UNKNOWN')),
               }
             : r
         )
