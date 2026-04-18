@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
   }
 
   // ADMIN sees all actions; USER sees only actions for their departments' employees.
-  let actions;
+  let actions: Awaited<ReturnType<typeof prisma.presenceAction.findMany>>;
   if (session.role === 'ADMIN') {
     actions = await prisma.presenceAction.findMany({
       where: { date },
