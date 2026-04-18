@@ -22,7 +22,7 @@ const LEAVE_TYPE_MAP: Record<string, LeaveTypeInfo> = {
   'Πατρότητας (Γέννησης Τέκνων) - Ειδική άδεια':                        { actionType: 'LEAVE',  excelCode: 'ΕΑ'  },
   'Συμμετοχή σε δίκη - Ειδική άδεια':                                    { actionType: 'LEAVE',  excelCode: 'ΕΑ'  },
   'Σχολική - Ειδική άδεια':                                              { actionType: 'LEAVE',  excelCode: 'ΕΑ'  },
-  'Φροντίδας Παιδιού -  Ειδική άδεια':                                   { actionType: 'LEAVE',  excelCode: 'ΕΑ'  },
+  'Φροντίδας Παιδιού -  Ειδική άδεια': /* two spaces — verify matches ERP DESCR exactly */ { actionType: 'LEAVE',  excelCode: 'ΕΑ'  },
   'Ασθένεια χωρίς ασφαλιστικά - Ασθένεια':                              { actionType: 'SICK',   excelCode: 'ΑΓΧ' },
 };
 
