@@ -227,11 +227,14 @@ export default function PresencePage() {
           const card = cardMap.get(emp.code);
           const act  = actionMap.get(emp.code);
 
+          const dayOfWeek = new Date(date).getDay(); // 0 = Sunday, 6 = Saturday
           let status: PresenceRow['status'];
           if (act) {
             status = act.action;
           } else if (card) {
             status = 'PRESENT';
+          } else if (dayOfWeek === 0 || dayOfWeek === 6) {
+            status = 'DAYOFF';
           } else {
             status = 'UNKNOWN';
           }
