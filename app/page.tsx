@@ -589,12 +589,19 @@ export default function PresencePage() {
         REJECTED: 'ΑΑ',
       };
 
-      type EmpRow = { code: string; surname: string; name: string; department: string | null };
-      type ActEntry = { employeeCode: string; action: ActionType };
-      type AttEntry = { code: string };
+      type EmpRow    = { code: string; surname: string; name: string; department: string | null };
+      type ActEntry  = { employeeCode: string; action: ActionType };
+      type AttEntry  = { code: string };
       type LeaveEntry = { employeeCode: string; excelCode: string };
 
-      const rows = (data.employees as EmpRow[]).map((emp) => {
+      const typedData = data as {
+        employees:  EmpRow[];
+        attendance: Record<string, AttEntry[]>;
+        actions:    Record<string, ActEntry[]>;
+        leaves?:    Record<string, LeaveEntry[]>;
+      };
+
+      const rows = typedData.employees.map((emp) => {
         const row: Record<string, string> = {
           'Κωδικός': emp.code,
           'Επώνυμο': emp.surname,
@@ -611,19 +618,19 @@ export default function PresencePage() {
             continue;
           }
 
-          const dayActions: ActEntry[] = data.actions[dateStr] ?? [];
+          const dayActions: ActEntry[] = typedData.actions[dateStr] ?? [];
           const empAction = dayActions.find((a) => a.employeeCode === emp.code);
 
           if (empAction) {
             // Manager-set action — use broad STATUS_CODE (unchanged behaviour)
             row[colHeader] = STATUS_CODE[empAction.action] ?? '';
           } else {
-            const dayAtt: AttEntry[] = data.attendance[dateStr] ?? [];
+            const dayAtt: AttEntry[] = typedData.attendance[dateStr] ?? [];
             if (dayAtt.some((a) => a.code === emp.code)) {
               row[colHeader] = STATUS_CODE.PRESENT;
             } else {
               // No card entry — check for ERP leave request (granular code)
-              const dayLeaves: LeaveEntry[] = data.leaves?.[dateStr] ?? [];
+              const dayLeaves: LeaveEntry[] = typedData.leaves?.[dateStr] ?? [];
               const empLeave = dayLeaves.find((l) => l.employeeCode === emp.code);
               row[colHeader] = empLeave ? empLeave.excelCode : '';
             }
