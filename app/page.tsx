@@ -44,6 +44,7 @@ import {
   ChevronDown,
   Table2,
   Calendar,
+  TriangleAlert,
 } from 'lucide-react';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -910,7 +911,18 @@ export default function PresencePage() {
                         {row.code}
                       </TableCell>
                       <TableCell className="font-medium">{row.surname}</TableCell>
-                      <TableCell>{row.name}</TableCell>
+                      <TableCell>
+                        <span>{row.name}</span>
+                        {row.hasCardEntry && row.leaveRequest && (
+                          <span
+                            className="ml-2 inline-flex items-center gap-1 text-xs text-amber-600 font-medium"
+                            title="Ο εργαζόμενος έχει αίτημα άδειας αλλά εμφανίζει ώρες εργασίας"
+                          >
+                            <TriangleAlert className="h-3 w-3" />
+                            Αίτημα άδειας
+                          </span>
+                        )}
+                      </TableCell>
                       <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
                         {row.department ?? '—'}
                       </TableCell>
@@ -926,6 +938,11 @@ export default function PresencePage() {
                       )}
                       <TableCell className="text-center">
                         <Badge className={sc.className}>{sc.label}</Badge>
+                        {!row.action && row.leaveRequest && (
+                          <p className="text-xs text-amber-700 mt-0.5 max-w-[140px] truncate" title={row.leaveRequest.description}>
+                            {row.leaveRequest.description}
+                          </p>
+                        )}
                         {row.actionNote && (
                           <p className="text-xs text-muted-foreground mt-0.5 max-w-[120px] truncate">
                             {row.actionNote}
