@@ -10,6 +10,7 @@ import { isExcludedEmployeeCode } from '@/lib/employees';
 import { toLocalDateString } from '@/lib/utils';
 import { prisma } from '@/lib/prisma';
 import sql from 'mssql';
+import { resolveLeaveType } from '@/lib/leaveTypes';
 
 export async function GET(req: NextRequest) {
   const session = await getSession(req);
@@ -55,12 +56,16 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ employees: [], attendance: {}, actions: {} });
     }
 
-    // ── Queries 1, 2, 3 in parallel ─────────────────────────────────────────
+    // ── Queries 1, 2, 3, 4 in parallel ──────────────────────────────────────
     const attRequest = pool.request();
     attRequest.input('monthStart', sql.DateTime, monthStart);
     attRequest.input('monthEnd',   sql.DateTime, monthEnd);
 
-    const [empResult, attResult, dbActions] = await Promise.all([
+    const leaveRequest = pool.request();
+    leaveRequest.input('monthStart', sql.Date, monthStart);
+    leaveRequest.input('monthEndDate', sql.Date, new Date(year, month - 1, new Date(year, month, 0).getDate()));
+
+    const [empResult, attResult, dbActions, leaveResult] = await Promise.all([
       empRequest.query(`
         SELECT
           e.[CODE]       AS code,
@@ -93,6 +98,19 @@ export async function GET(req: NextRequest) {
       prisma.presenceAction.findMany({
         where: { date: { gte: monthStartStr, lte: monthEndStr } },
       }),
+      leaveRequest.query(`
+        SELECT
+          e.[CODE]     AS employeeCode,
+          t.[DESCR]    AS description,
+          CAST(a.[START_DATE] AS DATE) AS startDate,
+          CAST(a.[END_DATE]   AS DATE) AS endDate
+        FROM [PYLON].[dbo].[ADEIES_DT] a
+        LEFT JOIN [PYLON].[dbo].[vSEM_EMPS] e ON a.[ID_EMP] = e.[ID_EMP]
+        LEFT JOIN [PYLON].[dbo].[ADEIES_TYPE] t ON a.[ID_TYPE] = t.[ID]
+        WHERE a.[START_DATE] <= @monthEndDate
+          AND a.[END_DATE]   >= @monthStart
+          AND e.[CODE] IS NOT NULL
+      `),
     ]);
 
     // ── Build response maps ──────────────────────────────────────────────────
@@ -116,7 +134,25 @@ export async function GET(req: NextRequest) {
       actions[act.date].push({ employeeCode: act.employeeCode, action: act.action });
     }
 
-    return NextResponse.json({ employees, attendance, actions });
+    type LeaveRow = { employeeCode: string; description: string; startDate: Date | string; endDate: Date | string };
+    const leaves: Record<string, { employeeCode: string; excelCode: string }[]> = {};
+
+    for (const row of leaveResult.recordset as LeaveRow[]) {
+      const start = typeof row.startDate === 'string' ? row.startDate.slice(0, 10) : toLocalDateString(row.startDate);
+      const end   = typeof row.endDate   === 'string' ? row.endDate.slice(0, 10)   : toLocalDateString(row.endDate);
+      const { excelCode } = resolveLeaveType(row.description);
+
+      let cur = new Date(start);
+      const endDate = new Date(end);
+      while (cur <= endDate) {
+        const dateStr = toLocalDateString(cur);
+        if (!leaves[dateStr]) leaves[dateStr] = [];
+        leaves[dateStr].push({ employeeCode: row.employeeCode, excelCode });
+        cur = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate() + 1);
+      }
+    }
+
+    return NextResponse.json({ employees, attendance, actions, leaves });
   } catch (err) {
     console.error('[GET /api/export/monthly]', err);
     return NextResponse.json(
