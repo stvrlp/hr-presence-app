@@ -356,10 +356,14 @@ export default function PresencePage() {
     () => baseFiltered.filter((r) => r.hasCardEntry),
     [baseFiltered]
   );
-  const absenceRows = useMemo(
-    () => baseFiltered.filter((r) => !r.hasCardEntry),
-    [baseFiltered]
-  );
+  const absenceRows = useMemo(() => {
+    const dow = new Date(selectedDate).getDay();
+    return baseFiltered.filter(
+      (r) =>
+        !r.hasCardEntry &&
+        !(dow === 0 && !r.actionId && !r.hasCardEntry)
+    );
+  }, [baseFiltered, selectedDate]);
 
   const filteredRows = activeTab === 'presences' ? presenceRows : absenceRows;
 
