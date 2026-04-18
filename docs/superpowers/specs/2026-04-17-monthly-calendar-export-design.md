@@ -94,7 +94,7 @@ New `handleMonthlyExport()` function:
 
 ### 3. UI
 
-New button "Εξαγωγή Μηνός" added next to the existing "Εξαγωγή σε Excel" button in the filters row of `page.tsx`. No additional date picker — always exports the current calendar month.
+New button "Εξαγωγή Μήνα" added next to the existing "Εξαγωγή σε Excel" button in the filters row of `page.tsx`. No additional date picker — always exports the current calendar month.
 
 ---
 

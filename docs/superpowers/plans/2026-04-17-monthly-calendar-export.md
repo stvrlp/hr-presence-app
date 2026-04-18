@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add a "Εξαγωγή Μηνός" button that exports the current calendar month's attendance as a calendar-grid Excel file (rows = employees, columns = dates, cells = status codes).
+**Goal:** Add a "Εξαγωγή Μήνα" button that exports the current calendar month's attendance as a calendar-grid Excel file (rows = employees, columns = dates, cells = status codes).
 
 **Architecture:** A new `/api/export/monthly` route runs three parallel queries (employees, full-month attendance via CARD_CODES→vSEM_EMPS, full-month actions from SQLite) and returns consolidated JSON. The client builds the Excel grid using the existing `xlsx` library and downloads it.
 
@@ -276,7 +276,7 @@ async function handleMonthlyExport() {
 }
 ```
 
-- [ ] **Step 2: Add the "Εξαγωγή Μηνός" button**
+- [ ] **Step 2: Add the "Εξαγωγή Μήνα" button**
 
 In `app/page.tsx`, find the existing export button (around line 538):
 
@@ -302,7 +302,7 @@ Replace with:
               disabled={loading}
             >
               <Download className="h-4 w-4 mr-2" />
-              Εξαγωγή Μηνός
+              Εξαγωγή Μήνα
             </Button>
             <Button
               variant="outline"
@@ -342,7 +342,7 @@ Expected: JSON with `employees` array, `attendance` object keyed by date, `actio
 
 - [ ] **Step 3: Test the button**
 
-Click "Εξαγωγή Μηνός". Verify:
+Click "Εξαγωγή Μήνα". Verify:
 - File downloads as `Παρουσιολόγιο_Απρίλιος_2026.xlsx`
 - First 4 columns: Κωδικός, Επώνυμο, Όνομα, Τμήμα
 - Remaining columns: `01/04/2026`, `02/04/2026`, ... `30/04/2026`
