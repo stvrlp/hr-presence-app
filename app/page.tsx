@@ -223,11 +223,11 @@ export default function PresencePage() {
           if (!empMap.has(emp.code)) empMap.set(emp.code, emp);
         }
 
+        const dayOfWeek = new Date(date).getDay(); // 0 = Sunday, 6 = Saturday
         const merged: PresenceRow[] = Array.from(empMap.values()).map((emp) => {
           const card = cardMap.get(emp.code);
           const act  = actionMap.get(emp.code);
 
-          const dayOfWeek = new Date(date).getDay(); // 0 = Sunday, 6 = Saturday
           let status: PresenceRow['status'];
           if (act) {
             status = act.action;
