@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
     const pool = await getPool();
     const request = pool.request();
     const [y, m, d] = dateParam.split('-').map(Number);
-    request.input('targetDate', sql.Date, new Date(y, m - 1, d));
+    request.input('targetDate', sql.Date, new Date(Date.UTC(y, m - 1, d)));
 
     let deptFilter = '';
     if (session.role === 'USER' && session.departments.length > 0) {

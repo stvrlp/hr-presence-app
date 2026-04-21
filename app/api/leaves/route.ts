@@ -37,9 +37,9 @@ export async function GET(req: NextRequest) {
     const pool = await getPool();
     const request = pool.request();
 
-    // Fix 2: timezone-safe date parsing
+    // Use Date.UTC so tedious (useUTC:true) reads the correct date in any server timezone
     const [dy, dm, dd] = date.split('-').map(Number);
-    request.input('date', sql.Date, new Date(dy, dm - 1, dd));
+    request.input('date', sql.Date, new Date(Date.UTC(dy, dm - 1, dd)));
 
     // Fix 3: build department filter for USER role
     let deptFilter = '';

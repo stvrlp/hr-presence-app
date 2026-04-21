@@ -32,8 +32,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Μη έγκυρος μήνας' }, { status: 400 });
   }
 
-  const monthStart = new Date(year, month - 1, 1, 0, 0, 0);
-  const monthEnd   = new Date(year, month, 1, 0, 0, 0); // exclusive upper bound
+  const monthStart = new Date(Date.UTC(year, month - 1, 1));
+  const monthEnd   = new Date(Date.UTC(year, month, 1)); // exclusive upper bound
 
   const monthStartStr = toLocalDateString(monthStart);
   const monthEndStr   = toLocalDateString(new Date(year, month - 1, new Date(year, month, 0).getDate()));
@@ -63,7 +63,7 @@ export async function GET(req: NextRequest) {
 
     const leaveRequest = pool.request();
     leaveRequest.input('monthStart', sql.Date, monthStart);
-    leaveRequest.input('monthEndDate', sql.Date, new Date(year, month, 0));
+    leaveRequest.input('monthEndDate', sql.Date, new Date(Date.UTC(year, month, 0)));
 
     const [empResult, attResult, dbActions, leaveResult] = await Promise.all([
       empRequest.query(`
